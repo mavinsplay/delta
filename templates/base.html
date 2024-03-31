@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="static/css/style.css" />
+    <title>{{ title }}</title>
+  </head>
+  <body>
+      <div class="def_head">
+        {% if current_user.is_authenticated %}
+          <div>
+            <a class="navbar-brand" href="/logout">{{ current_user.username }}</a>
+          </div>
+        {% else %}
+            <a class="navbar-brand">You are not registred</a>
+        {% endif %}
+      </div>
+    <main role="main" class="container">{% block content %}{% endblock %}</main>
+  </body>
+</html>

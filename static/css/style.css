@@ -1,0 +1,26 @@
+body {
+    background-color: #161616;
+}
+
+h1 {
+    color: #ffffff;
+}
+h2 {
+    color: #ffffff;
+}
+
+p {
+    color: #ffffff;
+}
+
+div {
+    margin-left: auto;
+    margin-right: auto;
+}
+div.alert_alert-danger {
+    color: #ffffff;
+}
+
+a.navbar-brand {
+    color: #ffffff;
+}
