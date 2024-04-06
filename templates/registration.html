@@ -1,64 +1,65 @@
-{% extends "base.html" %} {% block content %}
-<div class="register_form">
-    <h1>Delta</h1>
-    <p>Best search system</p>
-    <h2>Registration</h2>
-    <form method="post" novalidate>
-        {{ form.hidden_tag() }}
-        <p>
-            {{ form.username.label }}<br>
-            {{ form.username(class="form-control")}}<br>
-            {% for error in form.username.errors %}
-        <div class="alert_alert-danger" role="alert">
-            {{ error }}
+{% extends "reglogbase.html" %} {% block content %}
+<body>
+    <div class="register_form auth-f">
+        <h1 class="auth" style="padding-top: 2%;">Delta</h1>
+        <h2 class="auth">Registration</h2>
+        <form method="post" novalidate>
+            {{ form.hidden_tag() }}
+            <p>
+                {{ form.username.label }}<br>
+                {{ form.username(class="form-control")}}<br>
+                {% for error in form.username.errors %}
+                <div class="alert_alert-danger" role="alert">
+                    {{ error }}
+                </div>
+                {% endfor %}
+            </p>
+            
+            <p>
+                {{ form.email.label }}<br>
+                {{ form.email(class="form-control", type="email") }}<br>
+                {% for error in form.email.errors %}
+                <div class="alert_alert-danger" role="alert">
+                    {{ error }}
+                </div>
+                {% endfor %}
+            </p>
+            
+            <p>
+                {{ form.password.label }}<br>
+                {{ form.password(class="form-control", type="password") }}<br>
+                {% for error in form.password.errors %}
+                <div class="alert_alert-danger" role="alert">
+                    {{ error }}
+                </div>
+                {% endfor %}
+            </p>
+            
+            
+            <p>
+                {{ form.repeat_password.label }}<br>
+                {{ form.repeat_password(class="form-control", type="password") }}<br>
+                {% for error in form.repeat_password.errors %}
+                <div class="alert_alert-danger" role="alert">
+                    {{ error }}
+                </div>
+                {% endfor %}
+            </p>
+            
+            <p>{{ form.i_agree() }} {{ form.i_agree.label }}</p>
+            {% for error in form.i_agree.errors %}
+            <div class="alert_alert-danger" role="alert">
+                {{ error }}
+            </div>
+            {% endfor %}
+            <p>{{ form.remember_me() }} {{ form.remember_me.label }}</p>
+            <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
+        </form>
+        <div><p>{{ message }}</p></div>
+        <div>
+            <p>Have account?</p>
+            <p style="padding-bottom: 5%;"><a href="/login">Sign in</a></p>
         </div>
-        {% endfor %}
-        </p>
-
-        <p>
-            {{ form.email.label }}<br>
-            {{ form.email(class="form-control", type="email") }}<br>
-            {% for error in form.email.errors %}
-        <div class="alert_alert-danger" role="alert">
-            {{ error }}
-        </div>
-        {% endfor %}
-        </p>
-        
-        <p>
-            {{ form.password.label }}<br>
-            {{ form.password(class="form-control", type="password") }}<br>
-            {% for error in form.password.errors %}
-        <div class="alert_alert-danger" role="alert">
-            {{ error }}
-        </div>
-        {% endfor %}
-        </p>
-
-                
-        <p>
-            {{ form.repeat_password.label }}<br>
-            {{ form.repeat_password(class="form-control", type="password") }}<br>
-            {% for error in form.repeat_password.errors %}
-        <div class="alert_alert-danger" role="alert">
-            {{ error }}
-        </div>
-        {% endfor %}
-        </p>
-
-        <p>{{ form.i_agree() }} {{ form.i_agree.label }}</p>
-        {% for error in form.i_agree.errors %}
-        <div class="alert_alert-danger" role="alert">
-            {{ error }}
-        </div>
-        {% endfor %}
-        <p>{{ form.remember_me() }} {{ form.remember_me.label }}</p>
-        <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
-    </form>
-    <div><p>{{ message }}</p></div>
-    <div>
-        <p>Have account?</p>
-        <p><a href="/login">Sign in</a></p>
     </div>
-</div>
 {% endblock %}
+    

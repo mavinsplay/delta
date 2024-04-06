@@ -1,0 +1,49 @@
+{% extends "base.html" %} {% block content %}
+<div class="rectangle"></div>
+<form method="post" novalidate class="search-form">
+    {{ form.hidden_tag() }}
+    <div class="search-bar">
+        <p class="block">
+            {{ form.data(class="form-control input-bar", placeholder="enter data") }}
+            {% for error in form.data.errors %}
+                <div class="alert_alert-danger" role="alert">
+                    <br>{{ error }}
+                </div>
+            {% endfor %}
+        </p>
+        <p class="block sr-button">{{ form.submit(type="submit", class="btn btn-primary") }}</p>
+    </div>
+</form>
+<div class="rectangle" style="margin-top: 0px"></div>
+<div>
+    {% if data %}
+        {% if current_user.is_authenticated %}
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Sourse</th>
+                            <th scope="col">Data</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for sql_name, item in data.items() %}
+                        {% for ditt in item %}
+                            <tr>
+                                <th scope="row">{{ loop.index }}</th>
+                                <td>{{ sql_name }}</td>
+                                <td>{{ ditt|safe }}</td>
+                            </tr>
+                        {% endfor %}
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <img src="static/data/delta.png">
+        {% endif %}
+    {% endif %}
+    <p>{{ message }}</p>
+</div>
+{% endblock %}

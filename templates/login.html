@@ -1,27 +1,26 @@
-{% extends "base.html" %} {% block content %}
-<div class="login_form">
-    <h1>Delta</h1>
-    <p>Best search system</p>
-    <h2>Login</h2>
+{% extends "reglogbase.html" %} {% block content %}
+<div class="login_form auth-f">
+    <h1 class="auth" style="padding-top: 2%;">Delta</h1>
+    <h2 class="auth">Login</h2>
     <form method="post" novalidate>
         {{ form.hidden_tag() }}
         <p>
             {{ form.email.label }}<br>
             {{ form.email(class="form-control", type="email") }}<br>
             {% for error in form.email.errors %}
-        <div class="alert_alert-danger" role="alert">
-            {{ error }}
-        </div>
-        {% endfor %}
+            <div class="alert_alert-danger" role="alert">
+                {{ error }}
+            </div>
+            {% endfor %}
         </p>
         <p>
             {{ form.password.label }}<br>
             {{ form.password(class="form-control", type="password") }}<br>
             {% for error in form.password.errors %}
-        <div class="alert_alert-danger" role="alert">
-            {{ error }}
-        </div>
-        {% endfor %}
+            <div class="alert_alert-danger" role="alert">
+                {{ error }}
+            </div>
+            {% endfor %}
         </p>
         <p>{{ form.remember_me() }} {{ form.remember_me.label }}</p>
         <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
@@ -29,7 +28,8 @@
     <div><p>{{ message }}</p></div>
     <div>
         <p>No account?</p>
-        <p><a href="/registration">registration</a></p>
+        <p style="padding-bottom: 5%;"><a href="/registration">registration</a></p>
     </div>
-</div>
+</div>   
 {% endblock %}
+

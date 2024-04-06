@@ -6,6 +6,9 @@ import datetime
 from flask_login import UserMixin
 from sqlalchemy_serializer import SerializerMixin
 from hashlib import sha256
+from time import time
+import os
+import sqlite3
 
 SqlAlchemyBase = dec.declarative_base()
 
@@ -66,3 +69,57 @@ def global_init(db_file):
 def create_session() -> Session:
     global __factory
     return __factory()
+
+
+def sql_search(key: str) -> tuple:
+    if not key:
+        return dict(), 0
+    start_time = time()
+    data = dict()
+    for filename in os.listdir('db'):
+        if filename.endswith('.db'):
+            filepath = os.path.join('db', filename)
+            data[filename] = []
+            with sqlite3.connect(filepath) as conn:
+                cur = conn.cursor()
+                rows = [row for row in cur.execute("SELECT name FROM sqlite_master WHERE type='table'")]
+                table_names = list(map(lambda x: x[0], rows[1:]))
+                for table_name in table_names:
+                    column = cur.execute(f"SELECT name FROM PRAGMA_TABLE_INFO('{table_name}')")
+                    column_names = list(map(lambda x: x[0], column))
+                    for col in column_names:
+                        if key.isdigit() or '@' in key:
+                            search_condition = f"WHERE {col} = '{key}'"
+                        else:
+                            search_condition = f"WHERE {col} LIKE '%{key}%'"
+                        cur.execute(f"SELECT * FROM {table_name} {search_condition}")
+                        results = cur.fetchall()
+                        dicts = []
+                        if results:
+                            for res in results:
+                                ditt = dict()
+                                for num, val in enumerate(res):
+                                    ditt[column_names[num]] = val
+                                dicts.append(ditt)
+                            data[filename].extend(dicts)
+    cur.close()
+    search_time = time() - start_time
+    return data, search_time
+
+def sql_formate(dicts: list) -> list:
+    formated_dicts = dict()
+    for k, i in dicts.items():
+        formated_dicts[k] = []
+        for ditt in i:
+            formated = ''
+            for key, item in ditt.items():
+                formated += f'{key}:\t{item}<br>'
+            if len(formated) < 1000:
+                formated_dicts[k].append(formated.strip('<br>'))
+    return formated_dicts
+
+def get_api_key(user: User) -> str | None:
+    db_sess = create_session()
+    api_asoc = db_sess.query(ApiKeyAsoc).filter(ApiKeyAsoc.user_id == user.id).first()
+    if api_asoc:
+        return api_asoc.key
