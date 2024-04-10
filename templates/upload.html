@@ -1,0 +1,57 @@
+{% extends "base.html" %} {% block content %}
+    <div class="upload-div">
+        <p class="upload-text">
+            On this site you can post your own database.
+             After processing by moderators, if the database is new and not widespread,
+              it will be posted for general search. <br>Supported format: <strong>sqlite DB.</strong> 
+              Only files with the <strong> .db </strong> extension are accepted. <br>
+        </p>
+    </div>
+
+    <div class="login_form auth-f">
+        <h1 class="auth" style="padding-top: 2%;">Delta</h1>
+        <div id="triangle"></div>
+        <h2 class="auth">Sent DB</h2>
+        <form method="post" novalidate>
+            {{ form.hidden_tag() }}
+            <p>
+                {{ form.database_name.label }}<br>
+                {{ form.database_name(class="form-control") }}<br>
+                {% for error in form.database_name.errors %}
+                <div class="alert_alert-danger" role="alert">
+                    {{ error }}
+                </div>
+                {% endfor %}
+            </p>
+            <p>
+                {{ form.sourse_link.label }}<br>
+                {{ form.sourse_link(class="form-control") }}<br>
+                {% for error in form.sourse_link.errors %}
+                <div class="alert_alert-danger" role="alert">
+                    {{ error }}
+                </div>
+                {% endfor %}
+            </p>
+            <p>
+                {{ form.db_link.label }}<br>
+                {{ form.db_link(class="form-control") }}<br>
+                {% for error in form.db_link.errors %}
+                <div class="alert_alert-danger" role="alert">
+                    {{ error }}
+                </div>
+                {% endfor %}
+            </p>
+        <div class="bott-inf">
+            <p>{{ form.i_agree() }} {{ form.i_agree.label }}
+                {% for error in form.i_agree.errors %}
+                <div class="alert_alert-danger" role="alert">
+                    {{ error }}
+                </div>
+                {% endfor %}
+            </p>
+            
+            <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
+        </form>
+        <div><p>{{ message }}</p></div>
+    </div>   
+{% endblock %}
