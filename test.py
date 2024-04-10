@@ -6,8 +6,8 @@
 
 
 
-import json
+# import json
 
-with open(r"C:\Users\mavinsplay\Desktop\GSM.json", errors="ignore", encoding='utf-8') as f:
-    data = json.load(f)
-    print(data)
+# with open(r"C:\Users\mavinsplay\Desktop\GSM.json", errors="ignore", encoding='utf-8') as f:
+#     data = json.load(f)
+#     print(data)

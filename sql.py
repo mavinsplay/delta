@@ -27,6 +27,7 @@ class User(SqlAlchemyBase, UserMixin, SerializerMixin):
     
     access_level = orm.relationship('AccessRights')
     api_key = orm.relationship('ApiKeyAsoc')
+    db_links = orm.relationship('Upload_DB')
     
     def check_password(self, password):
         return sha256(password.encode('utf-8')).hexdigest() == self.hashed_password
@@ -47,6 +48,18 @@ class ApiKeyAsoc(SqlAlchemyBase, UserMixin, SerializerMixin):
     user_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey('users.id'), nullable=False)
     
     user = orm.relationship("User", back_populates='api_key')
+    
+class Upload_DB(SqlAlchemyBase, UserMixin, SerializerMixin):
+     __tablename__ = 'links'
+     
+     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
+     user_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey('users.id'), nullable=False)
+     database_name = sqlalchemy.Column(sqlalchemy.String, nullable=False)
+     sourse_link = sqlalchemy.Column(sqlalchemy.String, nullable=False)
+     db_link = sqlalchemy.Column(sqlalchemy.String, nullable=False)
+     
+     user = orm.relationship("User", back_populates='db_links')
+
 
 def global_init(db_file):
     global __factory
@@ -118,7 +131,7 @@ def sql_formate(dicts: list) -> list:
                 formated_dicts[k].append(formated.strip('<br>'))
     return formated_dicts
 
-def get_api_key(user: User) -> str | None:
+def get_api_key(user: User) -> str:
     db_sess = create_session()
     api_asoc = db_sess.query(ApiKeyAsoc).filter(ApiKeyAsoc.user_id == user.id).first()
     if api_asoc:

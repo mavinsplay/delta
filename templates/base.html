@@ -32,8 +32,14 @@
           </div>
         </div>
       </div>
+      {% if current_user.is_authenticated %}
+        <div class="upload up-2">
+          <a href="/upload"><img src="static/data/upload.png" class="upload-button">Upload DB</a>
+        </div>
+      {% endif %}
     </nav>
 
     <main role="main" class="container">{% block content %}{% endblock %}</main>
+
   </body>
 </html>

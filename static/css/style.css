@@ -18,6 +18,21 @@ div {
     margin-left: auto;
     margin-right: auto;
 }
+
+.btn {
+    background-color: black;
+    border: 2px solid white;
+}
+
+.btn:hover{
+    background: black;
+    border: 2px solid black;
+}
+
+.alert_alert-danger {
+    text-align: center;
+}
+
 div.alert_alert-danger {
     color: #ffffff;
 }
@@ -56,27 +71,27 @@ a.nav-link {
     margin-bottom: 10px;
 }
 
-
-.input-bar {
-    width: 85%;
-}
-
 .edit_form {
     background-color: #2f2f2f;
     border-radius: 20px;
     margin-top: 5%;
-    width: 45%;
+    width: 40%;
+    height: 600px;
 }
 
-@media (max-width: 496px) {
+@media (max-width: 991px) {
     .edit_form {
         width: auto;
     }
   }
 .form-control {
-    width: 90%;
     margin-left: auto;
     margin-right: auto;
+    width: 90%;
+}
+
+.input-bar {
+    width: 100%;
 }
 
 
@@ -88,10 +103,52 @@ a.nav-link {
     background-color: #2f2f2f;
     border-radius: 20px;
     width: 45%;
+    height: 750px;
     scale: 90%;
 }
-@media (max-width: 496px) {
+
+div.bott-inf {
+    position: absolute;
+    bottom: 0;
+    margin-left: auto;
+    width: 100%;
+}
+
+@media (max-width: 991px) {
     .auth-f {
         width: auto;
     }
+  }
+
+.table-responsive {
+    margin-top: 20px;
+    border-radius: 20px;
+    background-color: #161616;
+    border: 2px solid #ffffff;
+}
+
+.table>:not(caption)>*>* {
+    color: #ffffff;
+    background-color: transparent;
+}
+
+div.upload {
+    margin-right: 0;
+}
+
+img.upload-button {
+    width: 30%;
+    padding-right: 10%;
+}
+
+p.upload-text {
+    margin-top: 2%;
+}
+
+#triangle {
+    width: 0;
+    height: 0;
+    border-left: 50px solid transparent;
+    border-right: 50px solid transparent;
+    border-bottom: 90px solid white;
   }

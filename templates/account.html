@@ -1,33 +1,34 @@
 {% extends "base.html" %} {% block content %}
 <div class="edit_form">
-    <form method="post" novalidate>
+    <form method="post">
         {{ form.hidden_tag() }}
         <p  style="padding-top: 2%;">Edit your profile</p>
         <p>
             {{ form.username.label(style="margin-top: 5%") }}<br>
             {{ form.username(class="form-control") }}<br>
             {% for error in form.username.errors %}
-        <div class="alert_alert-danger" role="alert">
-            {{ error }}
-        </div>
-        {% endfor %}
+                <div class="alert_alert-danger" role="alert">
+                    {{ error }}
+                </div>
+            {% endfor %}
         </p>
 
         <p>
             {{ form.email.label }}<br>
             {{ form.email(class="form-control", type="email") }}<br>
             {% for error in form.email.errors %}
-        <div class="alert_alert-danger" role="alert">
-            {{ error }}
-        </div>
-        {% endfor %}
+                <div class="alert_alert-danger" role="alert">
+                    {{ error }}
+                </div>
+            {% endfor %}
         </p>
-        <p>Access level: {{ data["access_level"] }}</p>
-        <p>Modified: {{ data["modified_date"] }}</p>
-        <p>Api key: {{ data["api_key"] }}</p>
-        <p>{{ form.submit(type="submit", class="btn btn-primary", style="width: 30%; margin-bottom: 5%") }}</p>
-        <div><p>{{ message }}</p></div>
-
+        <div style="margin-top: 20%;">
+            <p>Access level: {{ data["access_level"] }}</p>
+            <p>Modified: {{ data["modified_date"] }}</p>
+            <p>Api key: {{ data["api_key"] }}</p>
+            <p>{{ form.submit(type="submit", class="btn btn-primary", style="width: 30%; margin-bottom: 5%") }}</p>
+            <div><p>{{ message }}</p></div>
+        </div>
     </form>
 </div>
 {% endblock %}

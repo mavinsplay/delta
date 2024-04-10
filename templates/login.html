@@ -22,11 +22,11 @@
             </div>
             {% endfor %}
         </p>
+    <div class="bott-inf">
         <p>{{ form.remember_me() }} {{ form.remember_me.label }}</p>
         <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
     </form>
     <div><p>{{ message }}</p></div>
-    <div>
         <p>No account?</p>
         <p style="padding-bottom: 5%;"><a href="/registration">registration</a></p>
     </div>

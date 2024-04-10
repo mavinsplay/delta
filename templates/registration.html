@@ -52,11 +52,11 @@
                 {{ error }}
             </div>
             {% endfor %}
+        <div class="bott-inf">
             <p>{{ form.remember_me() }} {{ form.remember_me.label }}</p>
             <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
         </form>
         <div><p>{{ message }}</p></div>
-        <div>
             <p>Have account?</p>
             <p style="padding-bottom: 5%;"><a href="/login">Sign in</a></p>
         </div>

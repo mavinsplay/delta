@@ -4,8 +4,8 @@ from flask_login import LoginManager, login_user, login_required, logout_user, c
 from flask_restful import Api
 from wtforms import StringField, PasswordField, BooleanField, SubmitField
 from wtforms.validators import DataRequired
-from sql import User, global_init, create_session, datetime, sql_search, sql_formate, get_api_key
-from api import UsersResource, UsersListResource
+from sql import User, global_init, create_session, datetime, sql_search, sql_formate, get_api_key, Upload_DB
+from api import UsersResource, UsersListResource, DbLinksResourse, DbLinksResourseList
 from hashlib import sha256
 import sqlalchemy
 
@@ -57,6 +57,13 @@ class EditForm(FlaskForm):
     username = StringField('username', validators=[DataRequired()])
     email = StringField('email', validators=[DataRequired()])
     submit = SubmitField('Edit')
+    
+class UploadForm(FlaskForm):
+    database_name = StringField('Database name', validators=[DataRequired()])
+    sourse_link = StringField('Sourse of leak (link)', validators=[DataRequired()])
+    db_link = StringField('Database link (any cloud storage)', validators=[DataRequired()])
+    i_agree = BooleanField('I agree with rules', validators=[DataRequired()])
+    submit = SubmitField('Sent')
     
 
 
@@ -120,6 +127,7 @@ def registration():
 @login_required
 def account():
     form = EditForm()
+    data = {}
     if request.method == 'GET':
         db_sess = create_session()
         user = db_sess.query(User).filter(User.email == current_user.email).first()
@@ -135,28 +143,62 @@ def account():
 
         else:
             abort(404)
+
     if form.validate_on_submit():
         db_sess = create_session()
         user = db_sess.query(User).filter(User.email == current_user.email).first()
         if user:
-            user.username = form.username.data
-            user.email = form.email.data # сделать автопроверку по email
-            user.modified_date = datetime.datetime.now()
-            db_sess.merge(user)
-            db_sess.commit()
-            return redirect('/account')
+            api_key = get_api_key(user)
+            data = {
+                'modified_date': user.modified_date,
+                'access_level': user.access_level.level,
+                'api_key': api_key
+            }
+            try:
+                user.username = form.username.data
+                user.email = form.email.data # сделать автопроверку по email
+                user.modified_date = datetime.datetime.now()
+                db_sess.merge(user)
+                db_sess.commit()
+                data['modified_date'] = user.modified_date
+                data['access_level'] = user.access_level.level
+                data['api_key'] = get_api_key(user)
+                return render_template('account.html', form=form, title='Account', data=data, message='Pass, information updated successfully')
+            except sqlalchemy.exc.IntegrityError:
+                print(data)
+                return render_template('account.html', form=form, title='Account', data=data, message='A user with this email exists')
         else:
             abort(404)
     return render_template('account.html', form=form, title='Account', data=data)
 
+@app.route('/upload', methods=['GET', 'POST'])
+@login_required
+def upload():
+    form = UploadForm()
+    if form.validate_on_submit():
+        db_sess = create_session()
+        link = Upload_DB()
+        link.user_id = current_user.id
+        link.database_name = form.database_name.data
+        link.sourse_link = form.sourse_link.data
+        link.db_link = form.db_link.data
+        db_sess.add(link)
+        db_sess.commit()
+        return render_template('upload.html',
+                               message='Succefully, DB submitted for moderation', title='Upload DB',
+                               form=form)
+    return render_template('upload.html', form=form, title='Upload DB')
+
 @app.route('/')
 def home():
-    return render_template('about.html')
+    return render_template('about.html', title='About us')
 
 
 api.add_resource(UsersListResource, '/api/v2/users')
 api.add_resource(UsersResource, '/api/v2/users/<int:user_id>')
 
+api.add_resource(DbLinksResourseList, '/api/v2/links')
+api.add_resource(DbLinksResourse, '/api/v2/links/<int:link_id>')
 
 if __name__ == '__main__':
     app.run(port=5000, host='0.0.0.0', debug=True)

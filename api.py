@@ -13,10 +13,24 @@ parser_for_post.add_argument('api_key', required=True)
 parser_for_get = reqparse.RequestParser()
 parser_for_get.add_argument('api_key', required=True)
 
+parser_for_link_post = reqparse.RequestParser()
+parser_for_link_post.add_argument('database_name', required=True)
+parser_for_link_post.add_argument('sourse_link', required=True)
+parser_for_link_post.add_argument('db_link', required=True)
+parser_for_link_post.add_argument('api_key', required=True)
+
+
+
 access_level = {
     'user': [],
     'admin': ['GET'],
     'developer': ['GET', 'DELETE', 'POST', 'PUT'],
+}
+
+db_access_level = {
+    'user': [],
+    'admin': ['GET', 'DELETE'],
+    'developer': ['GET', 'DELETE', 'POST', 'PUT']
 }
 
 
@@ -35,6 +49,12 @@ def abort_if_no_access(method, api_key):
             abort(403, message="access denied. You do not have permission")
     else:
         abort(403, message="access denied. Api key is not available")
+        
+def abort_if_no_link(link_id):
+    session = create_session()
+    link = session.query(Upload_DB).get(link_id)
+    if not link:
+        abort(404, message=f"Link {link_id} not found")
 
 
 class UsersResource(Resource):
@@ -97,3 +117,65 @@ class UsersListResource(Resource):
         session.add(user)
         session.commit()
         return jsonify({'id': user.id})
+    
+
+class DbLinksResourse(Resource):
+    def get(self, link_id):
+        args = parser_for_get.parse_args()
+        abort_if_no_access('GET', args['api_key'])
+        abort_if_no_link(link_id)
+        session = create_session()
+        link = session.query(Upload_DB).get(link_id)
+        return jsonify({'link': link.to_dict(
+            only=('id', 'user_id', 'database_name', 'sourse_link', 'db_link'))})
+
+    def delete(self, link_id):
+        args = parser_for_get.parse_args()
+        abort_if_no_access('DELETE', args['api_key'])
+        abort_if_no_link(link_id)
+        session = create_session()
+        link = session.query(Upload_DB).get(link_id)
+        session.delete(link)
+        session.commit()
+        return jsonify({'success': 'OK'})
+
+    def put(self, link_id):
+        args = parser_for_link_post.parse_args()
+        abort_if_no_access('PUT', args['api_key'])
+        abort_if_no_link(link_id)
+        session = create_session()
+        link = session.query(Upload_DB).get(link_id)
+        user_id = link.user.id
+        link.user_id=user_id
+        link.database_name=args['database_name']
+        link.database_name=args['database_name']
+        link.sourse_link=args['sourse_link']
+        link.db_link=args['db_link']
+        session.merge(link)
+        session.commit()
+        return jsonify({'link': link.to_dict(
+            only=('id', 'user_id', 'database_name', 'sourse_link', 'db_link'))})
+        
+class DbLinksResourseList(Resource):
+    def get(self):
+        args = parser_for_get.parse_args()
+        abort_if_no_access('GET', args['api_key'])
+        session = create_session()
+        links = session.query(Upload_DB).all()
+        return jsonify({'links': [item.to_dict(
+            only=('id', 'user_id', 'database_name', 'sourse_link', 'db_link')) for item in links]})
+
+    def post(self):
+        args = parser_for_link_post.parse_args()
+        abort_if_no_access('POST', args['api_key'])
+        session = create_session()
+        user = session.query(ApiKeyAsoc).filter(ApiKeyAsoc.key == args['api_key']).first()
+        link = Upload_DB(
+            user_id=user.id,
+            database_name=args['database_name'],
+            sourse_link=args['sourse_link'],
+            db_link=args['db_link']
+        )
+        session.add(link)
+        session.commit()
+        return jsonify({'id': link.id})
