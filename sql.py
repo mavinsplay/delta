@@ -7,6 +7,7 @@ from flask_login import UserMixin
 from sqlalchemy_serializer import SerializerMixin
 from hashlib import sha256
 from time import time
+from json import load, dump
 import os
 import sqlite3
 
@@ -88,6 +89,12 @@ def sql_search(key: str) -> tuple:
     if not key:
         return dict(), 0
     start_time = time()
+    fl = key + '.json'
+    if fl in os.listdir('results'):
+        with open(os.path.join('results', fl), 'r', encoding='utf-8') as json_file:
+            data = load(json_file)
+            search_time = time() - start_time
+            return data, search_time
     data = dict()
     for filename in os.listdir('db'):
         if filename.endswith('.db'):
@@ -116,6 +123,8 @@ def sql_search(key: str) -> tuple:
                                 dicts.append(ditt)
                             data[filename].extend(dicts)
     cur.close()
+    with open(os.path.join('results', fl), 'w', encoding='utf-8') as json_file:
+        dump(data, json_file)
     search_time = time() - start_time
     return data, search_time
 

@@ -6,6 +6,7 @@ from wtforms import StringField, PasswordField, BooleanField, SubmitField
 from wtforms.validators import DataRequired
 from sql import User, global_init, create_session, datetime, sql_search, sql_formate, get_api_key, Upload_DB
 from api import UsersResource, UsersListResource, DbLinksResourse, DbLinksResourseList
+from email_validator import validate_email
 from hashlib import sha256
 import sqlalchemy
 
@@ -48,23 +49,27 @@ class RegistrationForm(FlaskForm):
     i_agree = BooleanField('I agree with rules', validators=[DataRequired()])
     remember_me = BooleanField('remember me')
     submit = SubmitField('Register')
-    
+
+
 class SearchForm(FlaskForm):
     data = StringField('', validators=[DataRequired()])
     submit = SubmitField('Search')
+
 
 class EditForm(FlaskForm):
     username = StringField('username', validators=[DataRequired()])
     email = StringField('email', validators=[DataRequired()])
     submit = SubmitField('Edit')
-    
+
+
 class UploadForm(FlaskForm):
     database_name = StringField('Database name', validators=[DataRequired()])
-    sourse_link = StringField('Sourse of leak (link)', validators=[DataRequired()])
-    db_link = StringField('Database link (any cloud storage)', validators=[DataRequired()])
+    sourse_link = StringField('Sourse of leak (link)',
+                              validators=[DataRequired()])
+    db_link = StringField(
+        'Database link (any cloud storage)', validators=[DataRequired()])
     i_agree = BooleanField('I agree with rules', validators=[DataRequired()])
     submit = SubmitField('Sent')
-    
 
 
 @app.route('/search', methods=['GET', 'POST'])
@@ -74,12 +79,12 @@ def search():
         if current_user.is_authenticated:
             data, time = sql_search(form.data.data)
             return render_template('search.html', form=form,
-                                   data=sql_formate(data), 
+                                   data=sql_formate(data),
                                    message=f'Search completed successfully time: {time}', )
         else:
-            return render_template('search.html', 
-                                   form=form, 
-                                   data=None, 
+            return render_template('search.html',
+                                   form=form,
+                                   data=None,
                                    message='To search sign in to system')
     return render_template('search.html', form=form, data=None)
 
@@ -109,8 +114,10 @@ def registration():
                 db_sess = create_session()
                 user = User()
                 user.username = form.username.data
-                user.email = form.email.data
-                user.hashed_password = sha256(form.password.data.encode('utf-8')).hexdigest()
+                valid_email = validate_email(form.email.data)
+                user.email = valid_email.original
+                user.hashed_password = sha256(
+                    form.password.data.encode('utf-8')).hexdigest()
                 user.modified_date = datetime.datetime.now()
                 db_sess.add(user)
                 db_sess.commit()
@@ -120,6 +127,8 @@ def registration():
                 return render_template('registration.html', title='Registration', message='Passwords mismatch', form=form)
         except sqlalchemy.exc.IntegrityError:
             return render_template('registration.html', title='Registration', message='a user with this email exists', form=form)
+        except ValueError as error:
+            return render_template('registration.html', title='Registration', message=error.__class__.__name__, form=form)
     return render_template('registration.html', form=form, title='Registration')
 
 
@@ -130,7 +139,8 @@ def account():
     data = {}
     if request.method == 'GET':
         db_sess = create_session()
-        user = db_sess.query(User).filter(User.email == current_user.email).first()
+        user = db_sess.query(User).filter(
+            User.email == current_user.email).first()
         if user:
             form.username.data = user.username
             form.email.data = user.email
@@ -146,7 +156,8 @@ def account():
 
     if form.validate_on_submit():
         db_sess = create_session()
-        user = db_sess.query(User).filter(User.email == current_user.email).first()
+        user = db_sess.query(User).filter(
+            User.email == current_user.email).first()
         if user:
             api_key = get_api_key(user)
             data = {
@@ -154,22 +165,29 @@ def account():
                 'access_level': user.access_level.level,
                 'api_key': api_key
             }
-            try:
-                user.username = form.username.data
-                user.email = form.email.data # сделать автопроверку по email
-                user.modified_date = datetime.datetime.now()
-                db_sess.merge(user)
-                db_sess.commit()
-                data['modified_date'] = user.modified_date
-                data['access_level'] = user.access_level.level
-                data['api_key'] = get_api_key(user)
-                return render_template('account.html', form=form, title='Account', data=data, message='Pass, information updated successfully')
-            except sqlalchemy.exc.IntegrityError:
-                print(data)
-                return render_template('account.html', form=form, title='Account', data=data, message='A user with this email exists')
+            time_difference = datetime.datetime.now() - data['modified_date']
+            if time_difference.total_seconds() > 3600:
+                try:
+                    user.username = form.username.data
+                    valid_email = validate_email(form.email.data)
+                    user.email = valid_email.original
+                    user.modified_date = datetime.datetime.now()
+                    db_sess.merge(user)
+                    db_sess.commit()
+                    data['modified_date'] = user.modified_date
+                    data['access_level'] = user.access_level.level
+                    data['api_key'] = get_api_key(user)
+                    return render_template('account.html', form=form, title='Account', data=data, message='Pass, information updated successfully')
+                except sqlalchemy.exc.IntegrityError:
+                    return render_template('account.html', form=form, title='Account', data=data, message='A user with this email exists')
+                except ValueError as error:
+                    return render_template('account.html', form=form, title='Account', data=data, message=error.__class__.__name__)
+            else:
+                return render_template('account.html', form=form, title='Account', data=data, message='You can only update your account once per hour')
         else:
             abort(404)
     return render_template('account.html', form=form, title='Account', data=data)
+
 
 @app.route('/upload', methods=['GET', 'POST'])
 @login_required
@@ -189,9 +207,10 @@ def upload():
                                form=form)
     return render_template('upload.html', form=form, title='Upload DB')
 
+
 @app.route('/')
-def home():
-    return render_template('about.html', title='About us')
+def general():
+    return render_template('general.html', title='General')
 
 
 api.add_resource(UsersListResource, '/api/v2/users')
