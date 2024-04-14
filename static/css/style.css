@@ -46,6 +46,7 @@ div {
 
 div.alert_alert-danger {
     color: #ffffff;
+    
 }
 
 a {
@@ -193,4 +194,53 @@ p.upload-text {
     border-left: 50px solid transparent;
     border-right: 50px solid transparent;
     border-bottom: 90px solid white;
+  }
+
+#circle {
+    width: 500px;
+    height: 500px;
+    position: absolute;
+    border-radius: 100%;
+    border: 3px solid white;
+}
+
+#min-circle {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    border: 1px solid;
+    border-radius: 50px;
+    background-color: white;
+}
+
+div.c1 {
+    margin-left: 10%;
+}
+
+div.c2 {
+    margin-top: 15%;
+    margin-left: 40%;
+}
+
+div.m1 {
+    margin-left: 15%;
+}
+
+div.m2 {
+    margin-left: 65%;
+    margin-top: 40%;
+}
+
+@media (max-width: 1500px) {
+    #min-circle {
+        position: absolute;
+        pointer-events: none;
+        opacity: 0;
+    }
+    #circle {
+        position: absolute;
+        pointer-events: none;
+        opacity: 0;
+    }
+
   }

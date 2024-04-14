@@ -1,9 +1,17 @@
 {% extends "reglogbase.html" %} {% block content %}
 <body>
+    <div>
+        <div id="circle" class="c1"></div>
+        <div id="circle" class="c2"></div>
+    </div>
+    <div>
+        <div id="min-circle" class="m1"></div>
+        <div id="min-circle" class="m2"></div>
+    </div>
     <div class="register_form auth-f">
         <h1 class="auth" style="padding-top: 2%;">Delta</h1>
         <h2 class="auth">Registration</h2>
-        <form method="post" novalidate>
+        <form method="post">
             {{ form.hidden_tag() }}
             <p>
                 {{ form.username.label }}<br>
