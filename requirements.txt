@@ -1,0 +1,9 @@
+flask==3.0.2
+flask_wtf==1.2.1
+flask_login==0.6.3
+flask_restful==0.3.10
+flask_mail==0.9.1
+wtforms==3.1.2
+email_validator==2.1.1
+sqlalchemy==2.0.27
+sqlalchemy_serializer==1.4.1

@@ -33,6 +33,12 @@ db_access_level = {
     'developer': ['GET', 'DELETE', 'POST', 'PUT']
 }
 
+download_db_level = {
+    'user': [],
+    'admin': [],
+    'developer': ['GET', 'DELETE', 'POST', 'PUT']
+}
+
 
 def abort_if_user_not_found(user_id):
     session = create_session()
@@ -41,11 +47,11 @@ def abort_if_user_not_found(user_id):
         abort(404, message=f"User {user_id} not found")
 
 
-def abort_if_no_access(method, api_key):
+def abort_if_no_access(method, api_key, permission=access_level):
     session = create_session()
     asoc = session.query(ApiKeyAsoc).filter(ApiKeyAsoc.key == api_key).first()
     if asoc:
-        if method not in access_level[asoc.user.access_level.level]:
+        if method not in permission[asoc.user.access_level.level]:
             abort(403, message="access denied. You do not have permission")
     else:
         abort(403, message="access denied. Api key is not available")
@@ -122,7 +128,7 @@ class UsersListResource(Resource):
 class DbLinksResourse(Resource):
     def get(self, link_id):
         args = parser_for_get.parse_args()
-        abort_if_no_access('GET', args['api_key'])
+        abort_if_no_access('GET', args['api_key'], db_access_level)
         abort_if_no_link(link_id)
         session = create_session()
         link = session.query(Upload_DB).get(link_id)
@@ -131,7 +137,7 @@ class DbLinksResourse(Resource):
 
     def delete(self, link_id):
         args = parser_for_get.parse_args()
-        abort_if_no_access('DELETE', args['api_key'])
+        abort_if_no_access('DELETE', args['api_key'], db_access_level)
         abort_if_no_link(link_id)
         session = create_session()
         link = session.query(Upload_DB).get(link_id)
@@ -141,7 +147,7 @@ class DbLinksResourse(Resource):
 
     def put(self, link_id):
         args = parser_for_link_post.parse_args()
-        abort_if_no_access('PUT', args['api_key'])
+        abort_if_no_access('PUT', args['api_key'], db_access_level)
         abort_if_no_link(link_id)
         session = create_session()
         link = session.query(Upload_DB).get(link_id)
@@ -159,7 +165,7 @@ class DbLinksResourse(Resource):
 class DbLinksResourseList(Resource):
     def get(self):
         args = parser_for_get.parse_args()
-        abort_if_no_access('GET', args['api_key'])
+        abort_if_no_access('GET', args['api_key'], db_access_level)
         session = create_session()
         links = session.query(Upload_DB).all()
         return jsonify({'links': [item.to_dict(
@@ -167,7 +173,7 @@ class DbLinksResourseList(Resource):
 
     def post(self):
         args = parser_for_link_post.parse_args()
-        abort_if_no_access('POST', args['api_key'])
+        abort_if_no_access('POST', args['api_key'], db_access_level)
         session = create_session()
         user = session.query(ApiKeyAsoc).filter(ApiKeyAsoc.key == args['api_key']).first()
         link = Upload_DB(
@@ -179,3 +185,12 @@ class DbLinksResourseList(Resource):
         session.add(link)
         session.commit()
         return jsonify({'id': link.id})
+
+class DB_list(Resource):
+    def get(self):
+        args = parser_for_get.parse_args()
+        abort_if_no_access('GET', args['api_key'], download_db_level)
+        session = create_session()
+        links = session.query(Upload).all()
+        return jsonify({'Dbs': [item.to_dict(
+            only=('id', 'filename')) for item in links]})

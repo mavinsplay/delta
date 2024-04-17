@@ -2,10 +2,10 @@
 <body>
     <div>
         <div id="circle" class="c1"></div>
-        <div id="circle" class="c2"></div>
-    </div>
-    <div>
         <div id="min-circle" class="m1"></div>
+    </div>
+    <div class="cc2">
+        <div id="circle" class="c2"></div>
         <div id="min-circle" class="m2"></div>
     </div>
     <div class="register_form auth-f">
@@ -54,7 +54,7 @@
                 {% endfor %}
             </p>
             
-            <p>{{ form.i_agree() }} {{ form.i_agree.label }}</p>
+            <p>{{ form.i_agree() }} {{ form.i_agree.label }} <a href="/rules">rules</a></p>
             {% for error in form.i_agree.errors %}
             <div class="alert_alert-danger" role="alert">
                 {{ error }}

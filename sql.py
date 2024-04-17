@@ -8,6 +8,7 @@ from sqlalchemy_serializer import SerializerMixin
 from hashlib import sha256
 from time import time
 from json import load, dump
+from random import choice
 import os
 import sqlite3
 
@@ -60,6 +61,13 @@ class Upload_DB(SqlAlchemyBase, UserMixin, SerializerMixin):
      db_link = sqlalchemy.Column(sqlalchemy.String, nullable=False)
      
      user = orm.relationship("User", back_populates='db_links')
+
+class Upload(SqlAlchemyBase, UserMixin, SerializerMixin):
+    __tablename__ = 'files'
+    
+    id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
+    filename = sqlalchemy.Column(sqlalchemy.String(50))
+    data = sqlalchemy.Column(sqlalchemy.LargeBinary)
 
 
 def global_init(db_file):
@@ -145,3 +153,9 @@ def get_api_key(user: User) -> str:
     api_asoc = db_sess.query(ApiKeyAsoc).filter(ApiKeyAsoc.user_id == user.id).first()
     if api_asoc:
         return api_asoc.key
+    
+def generate_key(lenght: int) -> str:
+    c = ''
+    for _ in range(lenght):
+        c += choice('qwertyuiopasdfghjklzxcvbnm1234567890QWERTYUIOPASDFGHJKLZXCVBNM')
+    return c

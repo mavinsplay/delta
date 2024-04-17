@@ -219,7 +219,7 @@ div.c1 {
 
 div.c2 {
     margin-top: 15%;
-    margin-left: 40%;
+    margin-right: 10%;
 }
 
 div.m1 {
@@ -227,11 +227,17 @@ div.m1 {
 }
 
 div.m2 {
-    margin-left: 65%;
-    margin-top: 40%;
+    margin-top: 30%;
+    margin-right: 8%;
+
 }
 
-@media (max-width: 1500px) {
+div.cc2 {
+    display: flex;
+    justify-content: flex-end;
+}
+
+@media (max-width: 991px) {
     #min-circle {
         position: absolute;
         pointer-events: none;
@@ -244,3 +250,8 @@ div.m2 {
     }
 
   }
+
+.drag-n-drop {
+    background-color: #161616;
+    color: #ffffff;
+}

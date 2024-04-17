@@ -1,0 +1,32 @@
+{% extends "base.html" %} {% block content %}
+    <div class="upload-div">
+        <p class="upload-text">
+            On this site you can post your own database.
+             After processing by moderators, if the database is new and not widespread,
+              it will be posted for general search. <br>Supported format: <strong>sqlite DB.</strong> 
+              Only files with the <strong> .db </strong> extension are accepted. <br>
+        </p>
+    </div>
+
+    <div class="login_form auth-f">
+        <h1 class="auth" style="padding-top: 2%;">Delta</h1>
+        <div id="triangle"></div>
+        <h2 class="auth">Sent DB</h2>
+        <form method="post" enctype="multipart/form-data" novalidate>
+            {{ form.hidden_tag() }}
+
+            <p>
+                {{ form.file.label }}<br>
+                {{ form.file(class="form-control drag-n-drop", type="file", accept=".db") }}<br>
+                {% for error in form.file.errors %}
+                <div class="alert_alert-danger" role="alert">
+                    {{ error }}
+                </div>
+                {% endfor %}
+            </p>
+ 
+            <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
+        </form>
+        <div><p>{{ message }}</p></div>
+    </div>   
+{% endblock %}
