@@ -3,6 +3,8 @@ from flask_restful import abort, Resource
 from sql import *
 from flask_restful import reqparse
 
+# создание парсеров для аргументов
+
 parser_for_post = reqparse.RequestParser()
 parser_for_post.add_argument('username', required=True)
 parser_for_post.add_argument('email', required=True)
@@ -20,6 +22,7 @@ parser_for_link_post.add_argument('db_link', required=True)
 parser_for_link_post.add_argument('api_key', required=True)
 
 
+# уровни доступа для различных операций api
 
 access_level = {
     'user': [],
@@ -39,6 +42,7 @@ download_db_level = {
     'developer': ['GET', 'DELETE', 'POST', 'PUT']
 }
 
+# функции для предотвращения ошибок авторизации и доступа
 
 def abort_if_user_not_found(user_id):
     session = create_session()
@@ -55,14 +59,15 @@ def abort_if_no_access(method, api_key, permission=access_level):
             abort(403, message="access denied. You do not have permission")
     else:
         abort(403, message="access denied. Api key is not available")
-        
+
+
 def abort_if_no_link(link_id):
     session = create_session()
     link = session.query(Upload_DB).get(link_id)
     if not link:
         abort(404, message=f"Link {link_id} not found")
 
-
+# основные классы для создания REST API
 class UsersResource(Resource):
     def get(self, user_id):
         args = parser_for_get.parse_args()
@@ -89,10 +94,11 @@ class UsersResource(Resource):
         abort_if_user_not_found(user_id)
         session = create_session()
         user = session.query(User).get(user_id)
-        user.username=args['username']
-        user.email=args['email']
-        user.hashed_password=sha256(args['hashed_password'].encode('utf-8')).hexdigest()
-        user.access=args['access_level']
+        user.username = args['username']
+        user.email = args['email']
+        user.hashed_password = sha256(
+            args['hashed_password'].encode('utf-8')).hexdigest() # хеширование пароля алгоритмом sha256
+        user.access = args['access_level']
         session.merge(user)
         session.commit()
         return jsonify({'user': user.to_dict(
@@ -123,9 +129,9 @@ class UsersListResource(Resource):
         session.add(user)
         session.commit()
         return jsonify({'id': user.id})
-    
 
-class DbLinksResourse(Resource):
+
+class DbLinksResourse(Resource): # класс api для работы с кокретной ссылкой
     def get(self, link_id):
         args = parser_for_get.parse_args()
         abort_if_no_access('GET', args['api_key'], db_access_level)
@@ -152,17 +158,18 @@ class DbLinksResourse(Resource):
         session = create_session()
         link = session.query(Upload_DB).get(link_id)
         user_id = link.user.id
-        link.user_id=user_id
-        link.database_name=args['database_name']
-        link.database_name=args['database_name']
-        link.sourse_link=args['sourse_link']
-        link.db_link=args['db_link']
+        link.user_id = user_id
+        link.database_name = args['database_name']
+        link.database_name = args['database_name']
+        link.sourse_link = args['sourse_link']
+        link.db_link = args['db_link']
         session.merge(link)
         session.commit()
         return jsonify({'link': link.to_dict(
             only=('id', 'user_id', 'database_name', 'sourse_link', 'db_link'))})
-        
-class DbLinksResourseList(Resource):
+
+
+class DbLinksResourseList(Resource): # класс api для работы со всеми данными
     def get(self):
         args = parser_for_get.parse_args()
         abort_if_no_access('GET', args['api_key'], db_access_level)
@@ -175,7 +182,8 @@ class DbLinksResourseList(Resource):
         args = parser_for_link_post.parse_args()
         abort_if_no_access('POST', args['api_key'], db_access_level)
         session = create_session()
-        user = session.query(ApiKeyAsoc).filter(ApiKeyAsoc.key == args['api_key']).first()
+        user = session.query(ApiKeyAsoc).filter(
+            ApiKeyAsoc.key == args['api_key']).first()
         link = Upload_DB(
             user_id=user.id,
             database_name=args['database_name'],
@@ -186,7 +194,8 @@ class DbLinksResourseList(Resource):
         session.commit()
         return jsonify({'id': link.id})
 
-class DB_list(Resource):
+
+class DB_list(Resource): # класс api для получения списка баз данных
     def get(self):
         args = parser_for_get.parse_args()
         abort_if_no_access('GET', args['api_key'], download_db_level)

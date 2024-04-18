@@ -14,28 +14,37 @@ from io import BytesIO
 import sqlalchemy
 import os
 
-HOST = 'http://127.0.0.1:5000'
+HOST = 'http://127.0.0.1:5000' # ввод хоста для корректной работы email_send
 
 app = Flask(__name__)
 api = Api(app)
 app.config['SECRET_KEY'] = '8ca0713fc532cb0d5cbd072eaf4d4c14'
 
-app.config['MAIL_SERVER'] = 'smtp.yandex.ru'
+app.config['MAIL_SERVER'] = 'smtp.yandex.ru' # ввод данных для работы отправки email-подтверждения
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = 'tamasav@yandex.ru'
 app.config['MAIL_PASSWORD'] = '290923vbn'
 
-app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024
-app.config['UPLOAD_EXTENSIONS'] = ['.db']
+app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024 # ввод лимта файлов
+app.config['UPLOAD_EXTENSIONS'] = ['.db'] # разрешённые расширения для файлов
 
-global_init('delta-users.db')
+global_init('delta-users.db') # инициализация бд
 
 login_manager = LoginManager()
 login_manager.init_app(app)
 
-key, c = True, generate_key(40)
+email_requests = dict()
 
+
+def send_email(email): # функция отправки сообщения-подтверждения на почту
+    if email not in email_requests.keys():
+        email_requests[email] = generate_key(40)
+    mail = Mail(app)
+    msg = Message('Hi', sender='tamasav@yandex.ru', recipients=[email])
+    msg.body = f"To confirm your email, follow the lin" + \
+    "k: \n{HOST}{url_for('secure', k=email_requests[email], em=email)}"
+    mail.send(msg)
 
 
 @login_manager.user_loader
@@ -50,7 +59,7 @@ def logout():
     logout_user()
     return redirect('/login')
 
-
+# формы для регистрации, поиска и т.д.
 class LoginForm(FlaskForm):
     email = StringField('email', validators=[DataRequired()])
     password = PasswordField('password', validators=[DataRequired()])
@@ -79,8 +88,9 @@ class EditForm(FlaskForm):
     email = StringField('email', validators=[DataRequired()])
     submit = SubmitField('Edit')
 
+
 class DevUploadForm(FlaskForm):
-    file = FileField('File', validators=[DataRequired()]) 
+    file = FileField('File', validators=[DataRequired()])
     submit = SubmitField('Sent')
 
 
@@ -94,24 +104,30 @@ class UploadForm(FlaskForm):
     submit = SubmitField('Sent')
 
 
-@app.route('/search', methods=['GET', 'POST'])
+@app.route('/search', methods=['GET', 'POST']) # основная страница для проведения поиска
 def search():
     form = SearchForm()
     if form.validate_on_submit():
         if current_user.is_authenticated:
             data, time = sql_search(form.data.data)
-            return render_template('search.html', form=form,
+            return render_template('search.html',
+                                   form=form,
                                    data=sql_formate(data),
-                                   message=f'Search completed successfully time: {time}', title='Search')
+                                   message=f'Search completed successfully time: {time}', 
+                                   title='Search')
         else:
             return render_template('search.html',
                                    form=form,
                                    data=None,
-                                   message='To search sign in to system', title='Search')
-    return render_template('search.html', form=form, data=None, title='Search')
+                                   message='To search sign in to system',
+                                   title='Search')
+    return render_template('search.html', 
+                           form=form,
+                           data=None,
+                           title='Search')
 
 
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/login', methods=['GET', 'POST']) # форма входа
 def login():
     form = LoginForm()
     if form.validate_on_submit():
@@ -127,9 +143,8 @@ def login():
     return render_template('login.html', form=form)
 
 
-@app.route('/registration', methods=['GET', 'POST'])
+@app.route('/registration', methods=['GET', 'POST']) # форма регистрации
 def registration():
-    global key
     form = RegistrationForm()
     if form.validate_on_submit():
         try:
@@ -140,42 +155,43 @@ def registration():
                 valid_email = validate_email(form.email.data)
                 user.email = valid_email.original
                 user.hashed_password = sha256(
-                    form.password.data.encode('utf-8')).hexdigest()
+                    form.password.data.encode('utf-8')).hexdigest() # хеширование пароля
                 user.modified_date = datetime.datetime.now()
                 db_sess.add(user)
                 db_sess.commit()
+                send_email(user.email)
                 login_user(user, remember=form.remember_me.data)
-                key = False
-                return redirect(f'/check/{user.email}')
+                return redirect(f'search')
             else:
-                return render_template('registration.html', title='Registration', message='Passwords mismatch', form=form)
+                return render_template('registration.html',
+                                       title='Registration', 
+                                       message='Passwords mismatch',
+                                       form=form)
         except sqlalchemy.exc.IntegrityError:
-            return render_template('registration.html', title='Registration', message='a user with this email exists', form=form)
+            return render_template('registration.html',
+                                   title='Registration',
+                                   message='a user with this email exists',
+                                   form=form)
         except ValueError as error:
-            return render_template('registration.html', title='Registration', message=error.__class__.__name__, form=form)
-    return render_template('registration.html', form=form, title='Registration')
+            return render_template('registration.html', 
+                                   title='Registration',
+                                   message=error.__class__.__name__,
+                                   form=form)
+    return render_template('registration.html', 
+                           form=form, 
+                           title='Registration')
 
 
-@app.route('/check/<email>', methods=['GET', 'POST'])
-def check(email):
-    global c
-    if not key:
-        mail = Mail(app)
-        msg = Message('Hi', sender='tamasav@yandex.ru', recipients=[email])
-        msg.body = f"To confirm your email, follow the link: \n{HOST}{url_for('secure', k=c)}"
-        mail.send(msg)
-        return 'A confirmation email has been sent to the email address you specified'
-    return redirect('/search')
+@app.route('/secure/<k>/<em>') # подтверждение почты
+def secure(k, em):
+    if email_requests[em] == k:
+        del email_requests[em]
+        return 'The mail has been confirmed, go back to the site: <a href="/search">click</a>'
+    else:
+        abort(404)
 
 
-@app.route('/secure/<k>')
-def secure(k):
-    global key
-    key = True
-    return 'The mail has been confirmed, go back to the site: <a href="/search">click</a>'
-
-
-@app.route('/account', methods=['GET', 'POST'])
+@app.route('/account', methods=['GET', 'POST']) # форма изменения данных акканта
 @login_required
 def account():
     form = EditForm()
@@ -208,7 +224,7 @@ def account():
                 'access_level': user.access_level.level,
                 'api_key': api_key
             }
-            time_difference = datetime.datetime.now() - data['modified_date']
+            time_difference = datetime.datetime.now() - data['modified_date'] # если прошло меньше часа, то запрещаем изменения
             if time_difference.total_seconds() > 3600:
                 try:
                     user.username = form.username.data
@@ -220,19 +236,35 @@ def account():
                     data['modified_date'] = user.modified_date
                     data['access_level'] = user.access_level.level
                     data['api_key'] = get_api_key(user)
-                    return render_template('account.html', form=form, title='Account', data=data, message=f'information updated successfully')
+                    send_email(user.email)
+                    return render_template('account.html', 
+                                           form=form, title='Account',
+                                           data=data,
+                                           message=f'successfull, please verification email: {user.email}')
                 except sqlalchemy.exc.IntegrityError:
-                    return render_template('account.html', form=form, title='Account', data=data, message='A user with this email exists')
-                except ValueError as error:
-                    return render_template('account.html', form=form, title='Account', data=data, message=error.__class__.__name__)
+                    return render_template('account.html',
+                                           form=form, 
+                                           title='Account', 
+                                           data=data,
+                                           message='A user with this email exists')
+                except ValueError as error: # отлавливание ошибок связанных с доменом почты
+                    return render_template('account.html', 
+                                           form=form,
+                                           title='Account', 
+                                           data=data,
+                                           message=error.__class__.__name__)
             else:
-                return render_template('account.html', form=form, title='Account', data=data, message='You can only update your account once per hour')
+                return render_template('account.html', 
+                                       form=form, 
+                                       title='Account',
+                                       data=data, 
+                                       message='You can only update your account once per hour')
         else:
             abort(404)
     return render_template('account.html', form=form, title='Account', data=data)
 
 
-@app.route('/upload', methods=['GET', 'POST'])
+@app.route('/upload', methods=['GET', 'POST']) # форма для запроса на загрузку бд
 @login_required
 def upload():
     if current_user.access_level.level in ['developer', 'admin']:
@@ -248,11 +280,15 @@ def upload():
         db_sess.add(link)
         db_sess.commit()
         return render_template('upload.html',
-                               message='Succefully, DB submitted for moderation', title='Upload DB',
+                               message='Succefully, DB submitted for moderation', 
+                               title='Upload DB',
                                form=form)
-    return render_template('upload.html', form=form, title='Upload DB')
+    return render_template('upload.html',
+                           form=form, 
+                           title='Upload DB')
 
-@app.route('/upload_dev', methods=['GET', 'POST'])
+
+@app.route('/upload_dev', methods=['GET', 'POST']) # прямая загрузка базы в общий реестр
 def upload_dev():
     if current_user.access_level.level not in ['developer', 'admin']:
         abort(403)
@@ -266,26 +302,33 @@ def upload_dev():
             upload = Upload(filename=uploaded_file.filename, data=file_content)
             db_sess.add(upload)
             db_sess.commit()
-            return render_template('developer_upload.html', form=form, message=f'Uploaded: {uploaded_file.filename}')
+            return render_template('developer_upload.html', 
+                                   form=form,
+                                   message=f'Uploaded: {uploaded_file.filename}')
         else:
-            return render_template('developer_upload.html', form=form, message='File type error')
-    return render_template('developer_upload.html', form=form)
+            return render_template('developer_upload.html',
+                                   form=form, 
+                                   message='File type error')
+    return render_template('developer_upload.html',
+                           form=form)
 
-@app.route('/download/<upload_id>')
+
+@app.route('/download/<upload_id>') # загрузка базы их реестра для проверки
 def download(upload_id):
     if current_user.access_level.level != 'developer':
         abort(403)
     db_sess = create_session()
     upload = db_sess.query(Upload).filter(Upload.id == upload_id).first()
-    return send_file(BytesIO(upload.data), 
+    return send_file(BytesIO(upload.data),
                      download_name=upload.filename, as_attachment=True)
 
 
-@app.route('/')
+@app.route('/') # страница с основной информацией
 def general():
     return render_template('general.html', title='General')
 
-@app.route('/rules')
+
+@app.route('/rules') # правила сайта
 def rules():
     return render_template('rules.html', title='Rules')
 
